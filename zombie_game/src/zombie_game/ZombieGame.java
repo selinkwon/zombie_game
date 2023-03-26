@@ -9,8 +9,20 @@ class ZombieGame {
 	public int travel;
 	private int rNum;
 	private int bossNum;
+	private final int SIZE = 10;
 
-	public static final Hero HERO = new Hero(0, 200, 200, "용사세린");
+	public static final Hero HERO = new Hero(0, 300, 300, "용사세린");
+	private Zombie poketmon;
+	private Boss boss;
+
+	private final int PLAYER = 2;
+	private final int WALL = 3;
+	private final int ROAD = 0;
+
+	private int[][] map = new int[SIZE][SIZE];
+
+	private int pY = 0;
+	private int pX = 0;
 
 	public ZombieGame() {
 		this.ran = new Random();
@@ -20,30 +32,22 @@ class ZombieGame {
 	}
 
 	public void heroSet() {
-		this.rNum = ran.nextInt(10) + 1;
-		this.bossNum = ran.nextInt(10) + 1;
-		while (this.rNum == this.bossNum) {
-			this.bossNum = ran.nextInt(10) + 1;
-		}
 		System.out.println("내 캐릭터 정보");
 		System.out.printf("이름 : %s\n체력 : %d/%d\n\n", HERO.getName(), HERO.getHp(), HERO.getMax());
 	}
 
-	private void printMap() {
-		final int SIZE = 10;
+	public void monsterSet() {
+		this.rNum = ran.nextInt(30) + 1;
+		this.bossNum = ran.nextInt(30) + 1;
+		while (this.rNum == this.bossNum) {
+			this.bossNum = ran.nextInt(30) + 1;
+		}
+		this.poketmon = new Zombie(this.rNum, 140, 140, "꼬렛");
+		this.boss = new Boss(this.bossNum, 300, 300, "뮤", 200);
+	}
 
-		final int BAZZI = 2;
-		final int WALL = 3;
-		final int ROAD = 0;
-
-		int[][] map = new int[SIZE][SIZE];
-		int[][] mark = new int[SIZE][SIZE];
-
-		int pY = 0;
-		int pX = 0;
-		
-		// 맵 세팅 (벽 개수 : 7~13) (플레이어 랜덤 위치 배치)
-		int wallCnt = ran.nextInt(SIZE) + SIZE; // 7-13
+	private void setMap() {
+		int wallCnt = ran.nextInt(SIZE) + SIZE;
 		while (wallCnt + 1 > 0) {
 			int rY = ran.nextInt(SIZE);
 			int rX = ran.nextInt(SIZE);
@@ -52,54 +56,29 @@ class ZombieGame {
 				map[rY][rX] = WALL;
 
 				if (wallCnt == 0) {
-					map[rY][rX] = BAZZI;
+					map[rY][rX] = PLAYER;
 					pY = rY;
 					pX = rX;
 				}
 				wallCnt--;
 			}
 		}
-		// 플레이
-		while (true) {
-			for (int i = 0; i < SIZE; i++) {
-				for (int j = 0; j < SIZE; j++) {
-					if (map[i][j] == BAZZI) {
-						System.out.print("🐧");
-					} else if (map[i][j] == WALL) {
-						System.out.print("🌳");
-					} else {
-						System.out.print("➖");
-					}
+	}
+
+	private void printMap() {
+		for (int i = 0; i < SIZE; i++) {
+			for (int j = 0; j < SIZE; j++) {
+				if (map[i][j] == PLAYER) {
+					System.out.print("🐧");
+				} else if (map[i][j] == WALL) {
+					System.out.print("🌳");
+				} else {
+					System.out.print("➖");
 				}
-				System.out.println();
 			}
 			System.out.println();
-
-			// 입력
-			
-			char dir = inputmove();
-			int y = pY;
-			int x = pX;
-
-			if (dir == 'a')
-				x--;
-			else if (dir == 'd')
-				x++;
-			else if (dir == 'w')
-				y--;
-			else if (dir == 's')
-				y++;
-
-			if (y < 0 || y >= SIZE || x < 0 || x >= SIZE || map[y][x] == WALL)
-				continue;
-
-			map[pY][pX] = ROAD;
-			pY = y;
-			pX = x;
-			map[pY][pX] = BAZZI;
-
 		}
-
+		System.out.println();
 	}
 
 	private void printMenu() {
@@ -108,11 +87,18 @@ class ZombieGame {
 	}
 
 	private int input() {
+		int num = -1;
 		System.out.print("선택 : ");
-		int input = scan.nextInt();
-		return input;
+		String input = scan.next();
+		
+		try {
+			num = Integer.parseInt(input);
+		} catch (Exception e) {
+			
+		}
+		return num;
 	}
-	
+
 	private char inputmove() {
 		System.out.print("a(←)s(↓)d(→)w(↑)\n : ");
 		char dir = scan.next().charAt(0);
@@ -121,53 +107,110 @@ class ZombieGame {
 
 	private void move() {
 		printMap();
-		if (this.travel != this.rNum && this.travel != this.bossNum) {
-			if (this.travel >= 10) {
-				System.out.println("새로운 지역으로 이동합니다.");
 
+		char dir = inputmove();
+		int y = pY;
+		int x = pX;
+
+		if (dir == 'a')
+			x--;
+		else if (dir == 'd')
+			x++;
+		else if (dir == 'w')
+			y--;
+		else if (dir == 's')
+			y++;
+		else return;
+
+		if (y < 0 || y >= SIZE || x < 0 || x >= SIZE || map[y][x] == WALL)
+			return;
+
+		map[pY][pX] = ROAD;
+		pY = y;
+		pX = x;
+		map[pY][pX] = PLAYER;
+
+			if (this.travel >= 30) {
+				System.out.println("새로운 지역으로 이동합니다.");
+				this.travel = 0;
 			} else {
 				this.travel++;
 				System.out.printf("🐾현재위치 : %d🐾\n", this.travel);
 			}
-		} else {
-			if (this.travel == this.rNum) {
-				Zombie poketmon = new Zombie(this.rNum, 140, 140, "꼬렛");
-				fight(poketmon);
-			} else if (this.travel == this.bossNum) {
-				Boss boss = new Boss(this.bossNum, 300, 300, "뮤", 200);
-				fight(boss);
-			}
-		}
-
+				if (this.travel == this.rNum) {
+					fight(this.poketmon);
+				} else if (this.travel == this.bossNum) {
+					fight(this.boss);
+				}				
+			
 	}
 
 	private void fight(Zombie zom) {
-		System.out.printf("야생의 '%s'을(를) 발견했다!\n", zom.getName());
-		System.out.println("1. 싸우기");
-		System.out.println("2. 무시하고 가던길가기");
-		int sel = input();
-		if (sel == 1)
-			attack(zom);
-		else if (sel == 2)
-			this.travel++;
+		while (this.travel == this.rNum || this.travel == this.bossNum) {
+			System.out.printf("야생의 '%s'을(를) 발견했다!\n", zom.getName());
+			System.out.println("1. 싸우기");
+			System.out.println("2. 무시하기");
+			int sel = input();
+			if (sel == 1) {
+				while (this.travel == this.rNum || this.travel == this.bossNum) {
+					if (HERO.getHp() > 0) {
+
+						System.out.println("1. 공격하기");
+						System.out.println("2. 회복하기");
+						System.out.println("3. 도망가기");
+						int input = input();
+						if (input == 1) {
+							attack(zom);
+						} else if (input == 2) {
+							HERO.recovery();
+						} else if (input == 3) {
+							this.travel++;
+							break;
+						}
+					} else {
+						System.out.println("플레이할 캐릭터가 사망했습니다.");
+						System.out.println("게임을 종료합니다.");
+						return;
+					}
+				}
+			} else if (sel == 2)
+				this.travel++;
+			else {
+				System.out.println("잘못된 입력입니다.");
+			}
+		}
 	}
+	
 
 	private void attack(Zombie zom) {
-		HERO.attack(zom);
-		zom.attack(HERO);
+		if (HERO.getHp() > 0) {
+			HERO.attack(zom);
+		}
+		if (zom.getHp() > 0) {
+			zom.attack(HERO);
+			try {
+				Thread.sleep(1000);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}			
+		} else {
+			monsterSet();
+			move();
+		}
 
 	}
 
 	public void run() {
 		heroSet();
-		while (HERO.getHp() > 0) {
-			printMenu();
-			int sel = input();
-			if (sel == 1)
+		monsterSet();
+		setMap();
+		printMenu();
+		int sel = input();
+		if (sel == 1) {
+			while (HERO.getHp() > 0) {
 				move();
-			else if (sel == 2)
-				break;
-		}
-
+			}
+		} else return;
 	}
+
 }
