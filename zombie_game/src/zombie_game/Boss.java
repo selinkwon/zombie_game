@@ -5,7 +5,7 @@ public class Boss extends Zombie {
 	private int shield;
 
 	public Boss(int travel, int hp, int max, String name, int shield) {
-		super(travel, hp, max, name = "뮤");
+		super(travel, hp, max, name);
 		this.shield = shield;
 	}
 

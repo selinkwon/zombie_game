@@ -68,16 +68,20 @@ public class Hero extends Unit{
 	}
 	
 	public void recovery() {
-		if(this.potion>0) {
-			super.setHp(super.getHp()+100);
-			this.potion --;
-			System.out.printf("치유완료\nHP +100\n현재 HP : %d/%d\n",super.getHp(),super.getMax());
-			if(super.getHp()==super.getMax()) 
-				super.setHp(super.getMax());
-			
+		if(super.getHp()<super.getMax()) {
+			if(this.potion>0) {
+				super.setHp(super.getHp()+100);
+				if(super.getHp()>=super.getMax()) 
+					super.setHp(super.getMax());
+				this.potion --;
+				System.err.printf("💊치유완료💊\nHP +100\n현재 HP : %d/%d\n남은 포션 : %d\n",super.getHp(),super.getMax(),this.potion);			
+			}
+			else {
+				System.err.println("더 이상 사용할 포션이 없습니다.");
+			}			
 		}
 		else {
-			System.out.println("사용할 포션이 없습니다.");
+			System.err.println("이미 체력이 가득 차 있습니다.");
 		}
 	}
 	
