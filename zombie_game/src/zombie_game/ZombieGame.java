@@ -6,7 +6,7 @@ import java.util.Scanner;
 class ZombieGame {
 	private Random ran;
 	private Scanner scan;
-	public int travel=29;
+	public int travel;
 	private int rNum;
 	private int bossNum;
 	private final int SIZE = 10;
@@ -104,7 +104,6 @@ class ZombieGame {
 			if (map[rY][rX] == ROAD) {
 				map[rY][rX] = WALL;
 
-			
 				wallCnt--;
 			}
 		}
@@ -212,7 +211,6 @@ class ZombieGame {
 			if (sel == 1) {
 				while (this.travel == this.rNum || this.travel == this.bossNum) {
 					if (HERO.getHp() > 0) {
-
 						System.out.println("1. 공격하기");
 						System.out.println("2. 회복하기");
 						System.out.println("3. 도망가기");
