@@ -7,6 +7,7 @@ class ZombieGame {
 	private Random ran;
 	private Scanner scan;
 	public int travel;
+	private int stage = 1;
 	private int rNum;
 	private int bossNum;
 	private final int SIZE = 10;
@@ -19,11 +20,23 @@ class ZombieGame {
 	private final int WALL = 3;
 	private final int ROAD = 0;
 	private final int HOME = 1;
+	private final int HOMESIZE = 5;
+	private final int BED = 4;
+	private final int TV = 6;
+	private final int DOOR = 7;
+	private final int CHAIR = 8;
+	private final int PORTAL = 9;
+	private final int BACKPORTAL = 10;
+	private int log = -1;
+	
 
 	private int[][] map = new int[SIZE][SIZE];
+	private int[][] home = new int[HOMESIZE][HOMESIZE];
 
 	private int pY = 0;
 	private int pX = 0;
+	private int homePX = 0;
+	private int homePY = 0;
 
 	public ZombieGame() {
 		this.ran = new Random();
@@ -48,7 +61,9 @@ class ZombieGame {
 	}
 
 	private void setMap() {
-		int wallCnt = ran.nextInt(SIZE) + SIZE;
+		map[0][0] = HOME;
+		map[SIZE-1][SIZE-1] = PORTAL;
+		int wallCnt = ran.nextInt(SIZE)+WALL;
 		while (wallCnt + 1 > 0) {
 			int rY = ran.nextInt(SIZE);
 			int rX = ran.nextInt(SIZE);
@@ -57,7 +72,6 @@ class ZombieGame {
 				map[rY][rX] = WALL;
 
 				if (wallCnt == 0) {
-					map[rY][rX-1] = HOME;
 					map[rY][rX] = PLAYER;
 					pY = rY;
 					pX = rX;
@@ -76,6 +90,8 @@ class ZombieGame {
 					System.out.print("🌳");
 				}else if(map[i][j] == HOME) {
 					System.out.print("🛖");
+				}else if(map[i][j] == PORTAL){
+					System.out.print("🌀");
 				}else {
 					System.out.print("➖");
 				}
@@ -103,10 +119,20 @@ class ZombieGame {
 
 			if (map[rY][rX] == ROAD) {
 				map[rY][rX] = WALL;
-
+				
+				if (wallCnt == 0) {
+					map[0][1] = PLAYER;
+					pY = 0;
+					pX = 1;
+				}
 				wallCnt--;
 			}
 		}
+		this.travel = 30;
+	}
+	private void setNewUnit() {
+		map[0][0] = BACKPORTAL;
+		map[SIZE-1][SIZE-1] = PORTAL;
 	}
 	
 	private void printNewMap() {
@@ -116,6 +142,8 @@ class ZombieGame {
 					System.out.print("🐧 ");
 				} else if (map[i][j] == WALL) {
 					System.out.print("🏝️ ");
+				} else if(map[i][j] == PORTAL||map[i][j] == BACKPORTAL){
+					System.out.print(" 🌀");
 				} else {
 					System.out.print("〰️ ");
 				}
@@ -149,24 +177,17 @@ class ZombieGame {
 		return dir;
 	}
 
-	private void move() {
-		System.out.println(this.rNum);
-		System.out.println(this.bossNum);
-		if(this.travel < 30)
+	private void move() {		
+		if(this.stage == 1)
 			printMap();
-		else {
-			if(this.travel == 30) {
-				System.out.println("\n===================");
-				System.out.println("새로운 지역으로 이동합니다.");
-				System.out.println("===================\n");		
-				monsterNewSet();
-			}
+		else if(this.stage == 2){
+			setNewUnit();
 			printNewMap();
 		}
 
 		char dir = inputmove();
-		int y = pY;
-		int x = pX;
+		int y = this.pY;
+		int x = this.pX;
 
 		if (dir == 'a')
 			x--;
@@ -181,15 +202,37 @@ class ZombieGame {
 			return;
 		}
 
-		if (y < 0 || y >= SIZE || x < 0 || x >= SIZE || map[y][x] == WALL) {
+		if (y < 0 || y >= this.SIZE || x < 0 || x >= this.SIZE || this.map[y][x] == this.WALL) {
 			System.err.println("더 이상 이동 할 수 없는 곳입니다.");
 			return;
 		}
 
-		map[pY][pX] = ROAD;
-		pY = y;
-		pX = x;
-		map[pY][pX] = PLAYER;
+		if(this.map[y][x]==this.HOME) {
+			this.log = 1;
+			rest();
+		}
+		if(this.map[y][x] == BACKPORTAL) {
+			this.stage = 1;
+		}
+		if (this.map[y][x] == PORTAL&&this.stage == 1) {
+			System.out.println("\n===================");
+			System.out.println("새로운 지역으로 이동합니다.");
+			System.out.println("===================\n");
+			this.stage = 2;
+			monsterNewSet();
+			setNewMap();
+		}
+		else if(this.map[y][x] == PORTAL&&this.stage == 2) {
+			System.out.println("\n===================");
+			System.out.println("새로운 지역으로 이동합니다.");
+			System.out.println("===================\n");
+			this.stage = 3;
+		}
+
+		this.map[this.pY][this.pX] = this.ROAD;
+		this.pY = y;
+		this.pX = x;
+		this.map[this.pY][this.pX] = this.PLAYER;
 
 		this.travel++;
 		System.out.printf("🐾현재위치 : %d🐾\n", this.travel);
@@ -198,8 +241,110 @@ class ZombieGame {
 			fight(this.poketmon);
 		} else if (this.travel == this.bossNum) {
 			fight(this.boss);
+		} 
+		if(this.travel>=30&&this.stage == 1) {
+			this.travel = 0;
 		}
 
+	}
+	
+	private void rest() {
+		System.out.println("집에 들어왔습니다.");
+		while(this.log != -1) {
+			homeSet();
+			printHome();
+			homeMove();			
+		}		
+	}
+
+	private void homeSet() {
+		home[this.homePY][this.homePX] = PLAYER;
+		map[0][0] = HOME;
+		home[3][0] = BED;
+		home[1][4] = TV;
+		home[4][4] = DOOR;
+		home[0][4] = CHAIR;
+	}
+
+	private void printHome() {
+		for (int i = 0; i < HOMESIZE; i++) {
+			for (int j = 0; j < HOMESIZE; j++) {
+				if (home[i][j] == PLAYER) {
+					System.out.print("🐧");				
+				} else if (home[i][j] == BED) {
+					System.out.print("🛏️");
+				} else if(home[i][j] == TV){
+					System.out.print("📺");
+				}else if(home[i][j] == DOOR){
+					System.out.print("🕳️");
+				}else if(home[i][j] == CHAIR){
+					System.out.print("🪑");
+				}else {
+					System.out.print("➖");
+				}
+			}
+			System.out.println();
+		}
+		System.out.println();		
+	}
+	
+	private void homeMove() {
+		char dir = inputmove();
+		int y = this.homePY;
+		int x = this.homePX;
+
+		if (dir == 'a')
+			x--;
+		else if (dir == 'd')
+			x++;
+		else if (dir == 'w')
+			y--;
+		else if (dir == 's')
+			y++;
+		else {
+			System.err.println("잘못된 입력입니다.");
+			return;
+		}
+
+		if (y < 0 || y >= this.HOMESIZE || x < 0 || x >= this.HOMESIZE||this.home[y][x] == this.CHAIR) {
+			System.err.println("더 이상 이동 할 수 없는 곳입니다!");
+			return;
+		}
+		if(this.home[y][x] == this.DOOR) {
+			this.log = -1;
+			move();
+		}
+		else if(this.home[y][x] == this.BED) {
+			recovery();
+		}
+		else if(this.home[y][x] == this.TV) {
+			save();
+		}
+		
+
+		this.home[this.homePY][this.homePX] = this.ROAD;
+		this.homePY = y;
+		this.homePX = x;
+		this.home[this.homePY][this.homePX] = this.PLAYER;
+	}
+	
+	private void save() {
+		System.out.println("저장되었습니다.");
+	}
+
+	private void recovery() {
+		while(HERO.getHp() < HERO.getMax()) {
+			HERO.setHp(HERO.getHp()+10);
+			System.out.println("휴식중🛏️...");
+			try {
+				Thread.sleep(300);
+			} catch (Exception e) {
+			}
+			if(HERO.getHp()>=HERO.getMax())
+				HERO.setHp(HERO.getMax());
+			System.out.println("HP⬆️ : "+HERO.getHp());
+		}
+		System.out.println("체력을 모두 회복했다!");
 	}
 
 	private void fight(Zombie zom) {
@@ -223,14 +368,19 @@ class ZombieGame {
 							this.travel++;
 							break;
 						}
+						else {
+							System.err.println("잘못된 입력입니다.");
+						}
 					} else {
-						System.out.println("플레이할 캐릭터가 사망했습니다.");
-						System.out.println("게임을 종료합니다.");
+						System.err.println("게임을 종료합니다.");
 						return;
 					}
 				}
-			} else if (sel == 2)
+			} else if (sel == 2) {
+				monsterSet();
+				monsterNewSet();
 				this.travel++;
+			}
 			else {
 				System.err.println("잘못된 입력입니다.");
 			}
@@ -250,7 +400,10 @@ class ZombieGame {
 				e.printStackTrace();
 			}			
 		} else {
-			monsterSet();
+			if(this.travel>30) 
+				monsterNewSet();
+			else
+				monsterSet();				
 			move();
 		}
 	}
@@ -259,16 +412,17 @@ class ZombieGame {
 		heroSet();
 		monsterSet();
 		setMap();
-		setNewMap();
-		while(true) {
+		
+		while(HERO.getHp()>0) {
 			printMenu();
 			int sel = input();
 			if (sel == 1) {
 				while (HERO.getHp() > 0) {
+					homeSet();
 					move();
 				}
 			} else if(sel == 2) {
-				System.err.println("종료합니다.");
+				System.err.println("게임을 종료합니다.");
 				break;
 			}else {
 				System.err.println("잘못된 입력입니다.");

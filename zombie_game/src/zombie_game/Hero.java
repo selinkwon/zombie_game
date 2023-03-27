@@ -74,7 +74,7 @@ public class Hero extends Unit{
 				if(super.getHp()>=super.getMax()) 
 					super.setHp(super.getMax());
 				this.potion --;
-				System.err.printf("💊치유완료💊\nHP +100\n현재 HP : %d/%d\n남은 포션 : %d\n",super.getHp(),super.getMax(),this.potion);			
+				System.err.printf("🫙치유완료🫙\nHP +100\n현재 HP : %d/%d\n남은 포션 : %d\n",super.getHp(),super.getMax(),this.potion);			
 			}
 			else {
 				System.err.println("더 이상 사용할 포션이 없습니다.");
